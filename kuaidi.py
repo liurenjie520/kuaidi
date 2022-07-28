@@ -1,8 +1,9 @@
 # coding = utf-8
 import hashlib
 import json
-
+from flask import Flask, request
 import requests
+from ast import literal_eval
 
 
 class KuaiDi100:
@@ -38,8 +39,11 @@ class KuaiDi100:
         md = hashlib.md5()
         md.update(temp_sign.encode())
         sign = md.hexdigest().upper()
+        print(sign)
         request_data = {'customer': self.customer, 'param': param_str, 'sign': sign}
         return requests.post(self.url, request_data).text  # 发送请求
+
+
 class KuaiDi1002:
     def __init__(self):
         self.key = 'vSMrDIyO9655'  # TODO 客户授权key
@@ -51,20 +55,26 @@ class KuaiDi1002:
         :param num: 快递单号
         :return: requests.Response.text
         """
+        codema=''
         req_params = {'key': self.key, 'num': num}
-        kuaidi_code=requests.post(self.url, req_params).text # 发送请求
-        kuaidi_code=kuaidi_code.replace('[','')
-        kuaidi_code = kuaidi_code.replace(']', '')
-        kuaidi_code=json.loads(kuaidi_code)
-        kuaidi_code=kuaidi_code['comCode']
-
-        # print(kuaidi_code['comCode'])
-        return kuaidi_code
+        kuaidi_code = requests.post(self.url, req_params).text
+        new_list = literal_eval(kuaidi_code)
+        for i in new_list:
+            codema = i["comCode"]
+        return codema
 
 
 
-result = KuaiDi1002().auto_number('YT3707993107904')
-print(type(result))
+
+
 input = input("输入快递单号:")
+result = KuaiDi1002().auto_number(input)
 result = KuaiDi100().track(result, input, '', '', '')
 print(result)
+
+
+
+
+
+
+
