@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>跨域XHR请求 By jing_zhong</title>
+		<script src="./jquery-3.6.0.min.js"></script>
+		<script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/blueimp-md5/2.19.0/js/md5.min.js"></script>
+		<script>
+			//获取系统当前时间的函数
+			//			function gettime() {
+			//				var a = new Date();
+			//				var b = a.toLocaleTimeString();
+			//				var c = a.toLocaleDateString();
+			//				document.getElementById("currenttime").innerHTML = c + "&nbsp" + b + " By jing_zhong";
+			//			}
+			//			setInterval(function() {
+			//				gettime()
+			//			}, 1000);
+			//			var responsecontent;
+
+			//	var get_danhao = document.getElementById('danhao').value
+			//	console.log(get_danhao)
+			//	var url = "https://www.kuaidi100.com/autonumber/auto";
+			//	var keyy = "vSMrDIyO9655";
+			//	var customer = "5B0B1D325BB4BAF4AF9C9437B2344811";
+			//
+			//	param = "param:YT3707993107904key:vSMrDIyO9655"
+			//	console.log(param)
+			//	$.post(url, param,header="{'Content-Type', 'application/x-www-form-urlencoded'}").done(function(res) {
+			//		alert("数据: " + JSON.stringify(res));
+			//		responsecontent = JSON.stringify(res);
+			//		var Res = "成功获取HTTP响应如下: " + "\n" + responsecontent;
+			//		document.getElementById("result").innerText = Res;
+			//		document.getElementById("convertjson").disabled = false;
+			//		document.getElementById("jsonresult").innerText = "";
+			//	});
+
+			function get_code()
+
+			{
+				var get_danhao = document.getElementById('danhao').value
+				console.log(get_danhao)
+				var url = "https://www.kuaidi100.com/autonumber/auto";
+				var keyy = "vSMrDIyO9655";
+				var customer = "5B0B1D325BB4BAF4AF9C9437B2344811";
+				return $.ajax({
+					url: url,
+					type: 'POST',
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded"
+					},
+					data: {
+						key: keyy,
+						num: get_danhao
+					},
+					success: function(data, textStatus, req) {
+						console.log(textStatus);
+						console.log(data);
+						var resultCollection = data;
+						try {
+							var comCode = data[0].comCode;
+							
+						} catch(error) {
+							alert("发生错误了!可能是单号错误！");
+							console.log("发生错误了")
+						}
+//						var comCode = data[0].comCode;
+						var kuaidi_name = data[0].name;
+						console.log(comCode);
+						SendXMLHttpRequest(get_danhao, comCode, kuaidi_name)
+
+					},
+					error: function(req, textStatus, errorThrown) {
+						console.log("jqXHR[" + textStatus + "]: " + errorThrown);
+						console.log('jqXHR.data', req.responseText);
+					}
+				});
+			}
+
+			//发送HTTP请求的函数
+			function SendXMLHttpRequest(danhao, codema, name) {
+				var codema = codema;
+				var danhao = danhao;
+				var name = name;
+				var url = "https://poll.kuaidi100.com/poll/query.do";
+				var keyy = "vSMrDIyO9655";
+				var customer = "5B0B1D325BB4BAF4AF9C9437B2344811";
+
+				param = "{\"com\": \"" + codema + "\",\"num\": \"" + danhao + "\",\"phone\": \"\",\"from\": \"\",\"to\": \"\",\"resultv2\": \"1\",  \"show\":\"0\", \"order\": \"desc\"}"
+
+				var md5str = md5(param + keyy + customer).toString().toUpperCase();
+				console.log(md5str);
+
+				param2 = {
+					'customer': customer,
+					"param": param,
+					"sign": md5str
+				}
+
+				$.post(url, param2).done(function(res) {
+					//					alert("数据: " + JSON.stringify(res));
+					responsecontent = JSON.stringify(res);
+					duixian = JSON.parse(res)
+					//console.log(JSON.parse(res))
+					duixian_v2 = duixian.data
+					console.log(duixian_v2)
+					xianshi = ''
+					for(let i = 0; i < duixian_v2.length; ++i) {
+						//console.log(duixian_v2[i].context);
+						var ftime = duixian_v2[i].ftime;
+						var status = duixian_v2[i].status;
+						var context = duixian_v2[i].context;
+						xianshi = xianshi + ftime + ' [' + status + '] ' + context + "\n"
+						document.getElementById("result").innerText = "快递公司：" + name + "\n" + "快递详情如下:" + "\n" + xianshi;
+
+					}
+
+					var Res = "成功获取HTTP响应如下: " + "\n" + responsecontent;
+
+					//					document.getElementById("result").innerText = Res;
+					document.getElementById("convertjson").disabled = false;
+					document.getElementById("jsonresult").innerText = "";
+				});
+			}
+			//对json数据进行高亮的函数
+			function syntaxHighlight(json) {
+				if(typeof json != 'string') {
+					json = JSON.stringify(json, undefined, 2);
+				}
+				json = json.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+				return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+					var cls = 'number';
+					if(/^"/.test(match)) {
+						if(/:$/.test(match)) {
+							cls = 'key';
+						} else {
+							cls = 'string';
+						}
+					} else if(/true|false/.test(match)) {
+						cls = 'boolean';
+					} else if(/null/.test(match)) {
+						cls = 'null';
+					}
+					return '<span class="' + cls + '">' + match + '</span>';
+				});
+			}
+			//将请求结果转为json格式的函数
+			function ToJSON() {
+				console.log(responsecontent);
+				var Res = JSON.parse(responsecontent, null, 3);
+				document.getElementById("jsonresult").innerHTML = syntaxHighlight(Res);
+			}
+		</script>
+		<style>
+			pre {
+				background-color: rgb(238, 231, 231);
+				outline: 1px solid #ccc;
+				padding: 5px;
+				margin: 5px;
+			}
+			
+			.string {
+				color: rgb(22, 10, 126);
+			}
+			
+			.number {
+				color: rgb(13, 214, 124);
+			}
+			
+			.boolean {
+				color: rgb(225, 97, 195);
+			}
+			
+			.null {
+				color: rgb(172, 167, 14);
+			}
+			
+			.key {
+				color: #cf4914;
+			}
+			
+			#myDiv {
+				/*background-image: url("https://img2.baidu.com/it/u=1721953618,4133119400&fm=253&fmt=auto&app=138&f=JPEG");*/
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="myDiv">
+			<label id="currenttime" style="color: #AC2925; "></label> 输入快递单号：
+			<input id="danhao" style="color: #AC2925;"></input>
+			<button type="button" onclick="get_code()">点击查询快递</button>
+			<!--<button type="button" onclick="SendXMLHttpRequest()">1、利用XMLHttpRequest发送请求</button>-->
+			<p id="result" ></p>
+			<button type="button" disabled="false" onclick="ToJSON()" id="convertjson">2、将请求结果转为json格式</button>
+			<pre id="jsonresult" class="pre"></pre>
+		</div>
+	</body>
+
+</html>
