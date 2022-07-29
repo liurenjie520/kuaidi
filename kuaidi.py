@@ -41,6 +41,7 @@ class KuaiDi100:
         sign = md.hexdigest().upper()
         print(sign)
         request_data = {'customer': self.customer, 'param': param_str, 'sign': sign}
+        print(request_data)
         return requests.post(self.url, request_data).text  # 发送请求
 
 
@@ -59,6 +60,9 @@ class KuaiDi1002:
         req_params = {'key': self.key, 'num': num}
         kuaidi_code = requests.post(self.url, req_params).text
         new_list = literal_eval(kuaidi_code)
+
+        kuaidi_name=new_list[0]["name"]
+        # print(kuaidi_name)
         for i in new_list:
             codema = i["comCode"]
         return codema
@@ -68,13 +72,10 @@ class KuaiDi1002:
 
 
 input = input("输入快递单号:")
+# input=""
 result = KuaiDi1002().auto_number(input)
 result = KuaiDi100().track(result, input, '', '', '')
-print(result)
-
-
-
-
-
-
+json_object = json.loads(result)
+for i in json_object["data"]:
+    print(i["ftime"]+" ["+i["status"]+"] "+i["context"])
 
