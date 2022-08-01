@@ -39,9 +39,9 @@ class KuaiDi100:
         md = hashlib.md5()
         md.update(temp_sign.encode())
         sign = md.hexdigest().upper()
-        print(sign)
+        # print(sign)
         request_data = {'customer': self.customer, 'param': param_str, 'sign': sign}
-        print(request_data)
+        # print(request_data)
         return requests.post(self.url, request_data).text  # 发送请求
 
 
